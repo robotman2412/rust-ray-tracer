@@ -16,10 +16,12 @@ use sdl2::pixels::Color;
 
 fn main() {
     let sdl_ctx = sdl2::init().unwrap();
+    sdl2::hint::set("SDL_VIDEODRIVER", "wayland");
     let vid_ctx = sdl_ctx.video().unwrap();
     let window = vid_ctx
         .window("Ray Tracer", 300, 300)
         .position_centered()
+        .allow_highdpi()
         .build()
         .unwrap();
     let mut canvas = window.into_canvas().build().unwrap();
