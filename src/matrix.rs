@@ -2,11 +2,10 @@ use std::f64::consts::TAU;
 
 use rand::{rngs::ThreadRng, Rng};
 
-
 // Floating-point matrix of fixed size.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Matrix<const W: usize, const H: usize> {
-    data: [[f64; W]; H]
+    data: [[f64; W]; H],
 }
 
 // Matrices implement the Eq trait.
@@ -17,7 +16,9 @@ impl<const W: usize, const H: usize> Matrix<W, H> {
         Matrix { data: data }
     }
     pub fn zero() -> Matrix<W, H> {
-        Matrix { data: [[0.0; W]; H] }
+        Matrix {
+            data: [[0.0; W]; H],
+        }
     }
     pub fn get(&self, x: usize, y: usize) -> f64 {
         self.data[y][x]
@@ -64,27 +65,15 @@ impl<const D: usize> std::ops::MulAssign<Matrix<D, D>> for Matrix<D, D> {
 impl Matrix<3, 3> {
     pub fn rotate_x(angle: f64) -> Matrix<3, 3> {
         let (sin, cos) = angle.sin_cos();
-        Matrix::from([
-            [ 1.0,  0.0,  0.0,],
-            [ 0.0,  cos, -sin,],
-            [ 0.0,  sin,  cos,],
-        ])
+        Matrix::from([[1.0, 0.0, 0.0], [0.0, cos, -sin], [0.0, sin, cos]])
     }
     pub fn rotate_y(angle: f64) -> Matrix<3, 3> {
         let (sin, cos) = angle.sin_cos();
-        Matrix::from([
-            [ cos,  0.0,  sin,],
-            [ 0.0,  1.0,  0.0,],
-            [-sin,  0.0,  cos,],
-        ])
+        Matrix::from([[cos, 0.0, sin], [0.0, 1.0, 0.0], [-sin, 0.0, cos]])
     }
     pub fn rotate_z(angle: f64) -> Matrix<3, 3> {
         let (sin, cos) = angle.sin_cos();
-        Matrix::from([
-            [ cos, -sin,  0.0,],
-            [ sin,  cos,  0.0,],
-            [ 0.0,  0.0,  1.0,],
-        ])
+        Matrix::from([[cos, -sin, 0.0], [sin, cos, 0.0], [0.0, 0.0, 1.0]])
     }
     pub fn rotate_xyz(x: f64, y: f64, z: f64) -> Matrix<3, 3> {
         Matrix::rotate_x(x) * Matrix::rotate_x(y) * Matrix::rotate_x(z)
@@ -93,23 +82,17 @@ impl Matrix<3, 3> {
         Matrix::rotate_xyz(angles[0], angles[1], angles[2])
     }
     pub fn scale_xyz(x: f64, y: f64, z: f64) -> Matrix<3, 3> {
-        Matrix::from([
-            [ x , 0.0, 0.0,],
-            [0.0,  y , 0.0,],
-            [0.0, 0.0,  y ,],
-        ])
+        Matrix::from([[x, 0.0, 0.0], [0.0, y, 0.0], [0.0, 0.0, y]])
     }
     pub fn scale(coeffs: Vector<3>) -> Matrix<3, 3> {
         Matrix::scale_xyz(coeffs[0], coeffs[1], coeffs[2])
     }
 }
 
-
-
 // Floating-point vector of fixed size.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Vector<const L: usize> {
-    data: [f64; L]
+    data: [f64; L],
 }
 
 // Vectors implement the Eq trait.
@@ -124,10 +107,15 @@ impl<const L: usize> Vector<L> {
         Vector::<L> { data: [0.0; L] }
     }
     pub fn from<T: AsF64 + Copy>(data: [T; L]) -> Vector<L> {
-        Vector::<L> { data: data.map(|i| i.to_f64()) }
+        Vector::<L> {
+            data: data.map(|i| i.to_f64()),
+        }
+    }
+    pub fn data(&self) -> [f64; L] {
+        self.data
     }
     pub fn sqr_magnitude(&self) -> f64 {
-        self.data.iter().map(|f| f*f).sum()
+        self.data.iter().map(|f| f * f).sum()
     }
     pub fn magnitude(&self) -> f64 {
         self.sqr_magnitude().sqrt()
@@ -250,26 +238,86 @@ impl<const D: usize> std::ops::MulAssign<Matrix<D, D>> for Vector<D> {
 impl<const L: usize> std::ops::Neg for Vector<L> {
     type Output = Vector<L>;
     fn neg(self) -> Vector<L> {
-        Vector { data: self.data.map(f64::neg) }
+        Vector {
+            data: self.data.map(f64::neg),
+        }
     }
 }
 
 // Helpers for converting into f64.
-pub trait AsF64 {fn to_f64(self) -> f64;}
-impl AsF64 for f32 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for f64 {fn to_f64(self) -> f64 { self }}
-impl AsF64 for isize {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for usize {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for i128 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for u128 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for i64 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for u64 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for i32 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for u32 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for i16 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for u16 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for i8 {fn to_f64(self) -> f64 { self as f64 }}
-impl AsF64 for u8 {fn to_f64(self) -> f64 { self as f64 }}
+pub trait AsF64 {
+    fn to_f64(self) -> f64;
+}
+impl AsF64 for f32 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for f64 {
+    fn to_f64(self) -> f64 {
+        self
+    }
+}
+impl AsF64 for isize {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for usize {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for i128 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for u128 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for i64 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for u64 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for i32 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for u32 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for i16 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for u16 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for i8 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
+impl AsF64 for u8 {
+    fn to_f64(self) -> f64 {
+        self as f64
+    }
+}
 
 #[macro_export]
 macro_rules! vector {
